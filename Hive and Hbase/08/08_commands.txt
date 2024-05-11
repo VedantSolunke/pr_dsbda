@@ -1,0 +1,127 @@
+
+1. Create and Load table with Online Retail data in Hive
+
+CREATE TABLE OnlineRetail (
+    InvoiceNo VARCHAR(20),
+    StockCode VARCHAR(20),
+    Description VARCHAR(100),
+    Quantity INT,
+    InvoiceDate VARCHAR(20),
+    UnitPrice DECIMAL(10, 2),
+    CustomerID VARCHAR(20),
+    Country VARCHAR(50)
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+LOAD DATA LOCAL INPATH 'sample.txt' OVERWRITE INTO TABLE OnlineRetail;
+
+SELECT * FROM OnlineRetail;
+
+2. Create Index on Online Retail Table in Hive
+
+CREATE INDEX my_idx
+ON TABLE OnlineRetail (CustomerID)
+AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler'
+WITH DEFERRED REBUILD;
+
+
+CREATE INDEX idx_invoice ON TABLE OnlineRetail (InvoiceNo)
+AS 'COMPACT' WITH DEFERRED REBUILD;
+
+ALTER INDEX idx_invoice ON OnlineRetail REBUILD;
+
+3. Find the total and average sales in Hive
+
+SELECT SUM(Quantity * UnitPrice) AS total_sales,
+       AVG(Quantity * UnitPrice) AS avg_sales
+FROM OnlineRetail;
+
+4. Find Order details with maximum cost
+
+SELECT InvoiceNo, 
+       SUM(Quantity * UnitPrice) AS total_cost
+FROM OnlineRetail
+GROUP BY InvoiceNo
+ORDER BY total_cost DESC
+LIMIT 1;
+
+5. Find Customer details with maximum order total
+
+SELECT CustomerID, 
+       SUM(Quantity * UnitPrice) AS total_order_amount
+FROM OnlineRetail
+GROUP BY CustomerID
+ORDER BY total_order_amount DESC
+LIMIT 1;
+
+6. Find the Country with maximum and minimum sale
+
+SELECT Country, SUM(Quantity * UnitPrice) AS total_sales
+FROM OnlineRetail
+GROUP BY Country
+ORDER BY total_sales DESC
+LIMIT 1;
+
+SELECT Country, SUM(Quantity * UnitPrice) AS total_sales
+FROM OnlineRetail
+GROUP BY Country
+ORDER BY total_sales ASC
+LIMIT 1;
+
+
+
+
+o. Creating an external Hive table to connect to the HBase for OnlineRetail.
+
+
+hbase 
+
+create 'table08', 'cf'
+
+
+Hive
+
+CREATE EXTERNAL TABLE OnlineRetailHBase (
+    InvoiceNo VARCHAR(20),
+    StockCode VARCHAR(20),
+    Description VARCHAR(100),
+    Quantity INT,
+    InvoiceDate VARCHAR(20),
+    UnitPrice DECIMAL(10, 2),
+    CustomerID VARCHAR(20),
+    Country VARCHAR(50)
+)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES (
+    "hbase.columns.mapping" = ":key,cf:StockCode,cf:Description,cf:Quantity,cf:InvoiceDate,cf:UnitPrice,cf:CustomerID,cf:Country"
+)
+TBLPROPERTIES (
+    "hbase.table.name" = "table08"
+);
+
+INSERT INTO OnlineRetailHBase SELECT * FROM OnlineRetail;
+
+SELECT * FROM OnlineRetailHBase;
+
+
+p. Display records of OnlineRetail Table in Hbase.
+
+scan 'table08'
+
+
+
+sample.txt
+
+536365,85123A,WHITE HANGING HEART T-LIGHT HOLDER,6,12/1/2010 8:26,2.55,17850,United Kingdom
+536366,71053,WHITE METAL LANTERN,6,12/1/2010 8:26,3.39,17850,United Kingdom
+536367,84406B,CREAM CUPID HEARTS COAT HANGER,8,12/1/2010 8:26,2.75,17850,United Kingdom
+536368,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,6,12/1/2010 8:26,3.39,17850,United Kingdom
+536369,22326,ROUND SNACK BOXES SET OF 4 WOODLAND,8,12/1/2010 8:26,7.65,17850,United Kingdom
+536370,85099C,ASSORTED COLOUR BIRD ORNAMENT,6,12/1/2010 8:26,1.69,17850,United Kingdom
+536371,22114,HEART OF WICKER SMALL,8,12/1/2010 8:26,2.55,17850,United Kingdom
+536372,22752,SET 7 BABUSHKA NESTING BOXES,2,12/1/2010 8:26,7.95,17850,United Kingdom
+536373,21730,GLASS STAR FROSTED T-LIGHT HOLDER,6,12/1/2010 8:26,4.25,17850,United Kingdom
+536374,22633,HAND WARMER UNION JACK,6,12/1/2010 8:26,1.85,17850,United Kingdom

@@ -1,0 +1,64 @@
+# HBase Commands
+
+
+create 'flight','finfo','fsch'
+
+put 'flight',1,'finfo:source','Mumbai'
+put 'flight',1,'finfo:dest','Jannat'
+put 'flight',1,'finfo:year','2050'
+put 'flight',1,'fsch:at','10:10 am'
+put 'flight',1,'fsch:dt','12:10 am'
+put 'flight',1,'fsch:delay_in_mins',22
+
+put 'flight',2,'finfo:source','Kedarnath'
+put 'flight',2,'finfo:dest','Manali'
+put 'flight',2,'finfo:year','2030'
+put 'flight',2,'fsch:at','10:15 am'
+put 'flight',2,'fsch:dt','12:15 am'
+put 'flight',2,'fsch:delay_in_mins',26
+
+alter 'flight', {NAME=>'revenue'}
+
+put 'flight',4,'revenue:rs','45000'
+put 'flight',1,'revenue:rs','45000'
+put 'flight',2,'revenue:rs','25000'
+
+create 'flight0101','finfo','fsch'
+
+disable 'flight0101' # Disable the table before dropping
+drop 'flight0101'    # Drop the table
+
+
+# Hive Commands
+
+
+CREATE external TABLE hbase_flight_new(
+    fno int, 
+    fsource string,
+    fdest string,
+    fsh_at string,
+    fsh_dt string,
+    delay int
+)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES (
+    "hbase.columns.mapping" = ":key,finfo:source,finfo:dest,fsch:at,fsch:dt,fsch:delay_in_mins"
+)
+TBLPROPERTIES (
+    "hbase.table.name" = "flight"
+);
+
+select * from hbase_flight_new;
+
+select sum(delay) from hbase_flight_new;
+
+select avg(delay) from hbase_flight_new;
+
+SHOW INDEX ON hbase_flight_new;
+
+CREATE INDEX my_new_index
+ON TABLE hbase_flight_new (delay)
+AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler'
+WITH DEFERRED REBUILD;
+
+SHOW INDEX ON hbase_flight_new;
