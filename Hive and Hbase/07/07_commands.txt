@@ -58,6 +58,12 @@ JOIN item_info ii ON oi.ItemID = ii.Item_ID;
 d. Create an index on Customer Information System in Hive:
 
 $ hive
+
+CREATE INDEX my_idx_01
+ON TABLE Customer_info(Cust_ID)
+AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler'
+WITH DEFERRED REBUILD;
+
 CREATE INDEX idx_customer_info ON TABLE Customer_info (Cust_ID) AS 'COMPACT' WITH DEFERRED REBUILD;
 ALTER INDEX idx_customer_info ON Customer_info REBUILD;
 
@@ -133,17 +139,17 @@ customer_info.txt:
 
 order_info.txt:
 
-1,101,3
-2,102,2
-3,103,4
-4,104,1
-5,105,5
+1,201,3
+2,202,2
+3,203,4
+4,204,1
+5,205,5
 
 
 item_info.txt:
 
-1,Product A,10.50
-2,Product B,15.75
-3,Product C,20.00
-4,Product D,8.99
-5,Product E,12.25
+201,Product A,10.50
+202,Product B,15.75
+203,Product C,20.00
+204,Product D,8.99
+205,Product E,12.25
